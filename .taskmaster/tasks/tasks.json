@@ -1,0 +1,1028 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Initialize Go Project Structure and Dependencies",
+        "description": "Set up the Go project with proper module structure and install required dependencies",
+        "details": "Create Go module with `go mod init mcpp`. Set up directory structure: cmd/, core/, db/, server/, plugins/, monitoring/, config/. Install key dependencies: github.com/lorenzodonini/ocpp-go, github.com/sqlc-dev/sqlc, github.com/terinjokes/sqlitestdb, github.com/golang-migrate/migrate, github.com/mattn/go-sqlite3, github.com/prometheus/client_golang, github.com/gin-gonic/gin. Create basic main.go entry point and Makefile for build automation.",
+        "testStrategy": "Verify project builds successfully with `go build ./...` and all dependencies resolve correctly. Test basic module import structure.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Go Module and Basic Project Structure",
+            "description": "Create the Go module and establish the basic project directory structure with proper organization for a modular OCPP charging point management system",
+            "dependencies": [],
+            "details": "Run `go mod init mcpp` to initialize the Go module. Create the following directory structure: cmd/ (for main applications), core/ (for core business logic), db/ (for database-related code), server/ (for HTTP/WebSocket servers), plugins/ (for plugin system), monitoring/ (for metrics and monitoring), config/ (for configuration management). Each directory should contain a .gitkeep file to ensure they are tracked in version control. Set up proper Go module structure with go.mod file containing module name and Go version requirement.",
+            "status": "done",
+            "testStrategy": "Verify directory structure exists and go.mod file is properly formatted. Test that `go mod tidy` runs without errors."
+          },
+          {
+            "id": 2,
+            "title": "Install Core OCPP and Database Dependencies",
+            "description": "Install and configure the essential dependencies for OCPP protocol handling and database operations",
+            "dependencies": [],
+            "details": "Install github.com/lorenzodonini/ocpp-go for OCPP protocol implementation. Add github.com/sqlc-dev/sqlc for type-safe SQL code generation. Install github.com/terinjokes/sqlitestdb for testing database operations. Add github.com/golang-migrate/migrate for database migration management and github.com/mattn/go-sqlite3 for SQLite driver support. Run `go mod tidy` to ensure all dependencies are properly resolved and documented in go.mod and go.sum files.",
+            "status": "done",
+            "testStrategy": "Verify all dependencies are correctly installed by running `go mod download` and `go mod verify`. Check that imports can be resolved without errors."
+          },
+          {
+            "id": 3,
+            "title": "Install Web Server and Monitoring Dependencies",
+            "description": "Add dependencies for HTTP server functionality and Prometheus monitoring capabilities",
+            "dependencies": [],
+            "details": "Install github.com/gin-gonic/gin for HTTP server and REST API functionality. Add github.com/prometheus/client_golang for Prometheus metrics collection and exposure. Ensure all dependencies are compatible and resolve any version conflicts. Update go.mod with proper version constraints and run `go mod tidy` to clean up the dependency graph.",
+            "status": "done",
+            "testStrategy": "Test that all monitoring and web server dependencies can be imported successfully. Verify no version conflicts exist by running `go mod graph` and checking for duplicate dependencies."
+          },
+          {
+            "id": 4,
+            "title": "Create Basic Main Entry Point",
+            "description": "Implement the main.go file with basic application structure and initialization logic",
+            "dependencies": [],
+            "details": "Create cmd/mcpp/main.go as the main entry point for the application. Implement basic application initialization including command-line argument parsing, configuration loading, and graceful shutdown handling. Add basic logging setup and error handling. Include placeholder imports for core packages to be implemented in later tasks. Structure the main function to initialize core components in proper order: configuration, database, server, monitoring, and plugin system.",
+            "status": "done",
+            "testStrategy": "Verify the application compiles successfully with `go build ./cmd/mcpp`. Test that the application starts and shuts down gracefully. Ensure basic command-line help is available."
+          },
+          {
+            "id": 5,
+            "title": "Create Build Automation with Makefile",
+            "description": "Implement comprehensive Makefile for build automation, testing, and development workflow",
+            "dependencies": [],
+            "details": "Create a Makefile with targets for: build (compile the application), test (run all tests), clean (remove build artifacts), deps (install/update dependencies), lint (code quality checks), and run (start the application in development mode). Include targets for database operations like migrate-up and migrate-down. Add formatting targets using gofmt and goimports. Include a help target that documents all available commands. Ensure cross-platform compatibility and proper error handling in all targets.",
+            "status": "done",
+            "testStrategy": "Test all Makefile targets execute successfully. Verify `make build` produces a working executable. Test `make test` runs without errors even with empty test suite. Ensure `make help` displays comprehensive usage information."
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Implement Database Schema and Migration System",
+        "description": "Create SQLite database schema based on provided migration file and set up migration system",
+        "details": "Modify the existing sql/migrations/001_initial.up.sql file to include all required tables: chargers, transactions, meter_values with proper indexes and constraints. Implement migration runner using golang-migrate library. Create database connection pool manager with proper SQLite configuration. Add timestamp fields like last_heartbeat_at, last_boot_at, last_connect_at, last_tx_start_at, last_tx_stop_at as specified in requirements.",
+        "testStrategy": "Test migration up/down operations. Verify schema integrity with sample data insertion. Use sqlitestdb for isolated test database creation.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design and Create Database Schema",
+            "description": "Modify the existing sql/migrations/001_initial.up.sql file to include all required tables with proper structure, constraints, and indexes",
+            "dependencies": [],
+            "details": "Update sql/migrations/001_initial.up.sql to create three main tables: chargers (id, identifier, model, vendor, firmware_version, last_heartbeat_at, last_boot_at, last_connect_at, last_tx_start_at, last_tx_stop_at, created_at, updated_at), transactions (id, charger_id, connector_id, id_tag, start_time, stop_time, meter_start, meter_stop, status, created_at, updated_at), and meter_values (id, transaction_id, charger_id, connector_id, timestamp, measurand, value, unit, context, location, created_at). Add proper PRIMARY KEY, FOREIGN KEY constraints, and indexes on frequently queried columns like charger_id, transaction_id, and timestamp fields. Create corresponding down migration file for rollback capability.",
+            "status": "pending",
+            "testStrategy": "Validate SQL syntax and schema structure. Test table creation and constraint enforcement. Verify index creation and foreign key relationships work correctly."
+          },
+          {
+            "id": 2,
+            "title": "Implement Migration Runner System",
+            "description": "Set up golang-migrate library integration to handle database migrations with proper error handling and version tracking",
+            "dependencies": [
+              "2.1"
+            ],
+            "details": "Install and configure golang-migrate library. Create migration runner in internal/database/migrate.go that can execute up/down migrations from sql/migrations directory. Implement migration status checking and version tracking. Add command-line interface for running migrations manually. Handle migration errors gracefully with proper rollback mechanisms. Support both embedded migrations for production and file-based migrations for development. Create migration history tracking in schema_migrations table.",
+            "status": "pending",
+            "testStrategy": "Test migration up/down operations with multiple migration files. Verify migration version tracking and error handling. Test rollback scenarios and migration state consistency."
+          },
+          {
+            "id": 3,
+            "title": "Create Database Connection Pool Manager",
+            "description": "Implement SQLite database connection pool with proper configuration, connection lifecycle management, and performance optimization",
+            "dependencies": [
+              "2.2"
+            ],
+            "details": "Create database connection manager in internal/database/connection.go using database/sql with SQLite driver. Configure connection pool settings: max open connections, max idle connections, connection lifetime. Implement SQLite-specific optimizations: WAL mode, synchronous=NORMAL, cache_size, temp_store=MEMORY. Add connection health checks and automatic reconnection logic. Implement proper connection cleanup and graceful shutdown. Create database interface abstraction for easier testing and potential future database changes.",
+            "status": "pending",
+            "testStrategy": "Test connection pool behavior under concurrent access. Verify SQLite configuration settings are applied correctly. Test connection recovery after database locks or corruption scenarios."
+          },
+          {
+            "id": 4,
+            "title": "Implement Database Access Layer",
+            "description": "Create repository pattern implementation with CRUD operations for all database entities using the connection pool",
+            "dependencies": [
+              "2.3"
+            ],
+            "details": "Create repository interfaces and implementations in internal/database/repositories/ for chargers, transactions, and meter_values tables. Implement ChargerRepository with methods: Create, GetByID, GetByIdentifier, Update, Delete, UpdateLastHeartbeat, UpdateLastBoot, etc. Create TransactionRepository with methods for transaction lifecycle management. Implement MeterValueRepository for storing and querying meter readings. Use prepared statements for performance and SQL injection prevention. Add proper error handling and logging for database operations. Implement transaction support for multi-table operations.",
+            "status": "pending",
+            "testStrategy": "Test all CRUD operations with sample data. Verify prepared statement usage and SQL injection protection. Test transaction rollback scenarios and concurrent access patterns."
+          },
+          {
+            "id": 5,
+            "title": "Add Database Integration and Startup Sequence",
+            "description": "Integrate database system into main application with proper initialization, health checks, and graceful shutdown",
+            "dependencies": [
+              "2.4"
+            ],
+            "details": "Integrate database initialization into main application startup sequence. Add database health check endpoint that verifies connection and basic query functionality. Implement graceful shutdown that properly closes all database connections and completes pending transactions. Add database configuration validation and error reporting. Create database seeding functionality for development and testing. Implement database backup and restore utilities. Add monitoring hooks for database performance metrics. Ensure proper error propagation and logging throughout the database layer.",
+            "status": "pending",
+            "testStrategy": "Test complete application startup with database initialization. Verify health check endpoint accuracy. Test graceful shutdown behavior and connection cleanup. Validate error handling for database connectivity issues."
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Create SQLC Configuration and Generate Type-Safe Database Code",
+        "description": "Configure SQLC to generate type-safe Go code from SQL queries for database operations",
+        "details": "Create sqlc.yaml configuration file specifying database schema and query locations. Write SQL queries for CRUD operations on chargers, transactions, and meter_values tables. Generate Go code using `sqlc generate`. Create database service layer with methods for charger registration, transaction management, and meter data storage. Implement proper error handling and connection management.",
+        "testStrategy": "Verify generated code compiles and provides type safety. Test database operations with sample data using generated methods. Validate query performance with indexes.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create SQLC Configuration File and Project Structure",
+            "description": "Set up the SQLC configuration file and organize the project structure for SQL queries and generated code",
+            "dependencies": [],
+            "details": "Create sqlc.yaml configuration file in the project root specifying database driver as 'postgres', schema location as 'db/migrations/*.sql', queries location as 'db/queries/*.sql', and output directory as 'internal/db'. Create the necessary directory structure: db/migrations/, db/queries/, and internal/db/. Configure SQLC to generate Go code with proper package naming and import paths. Set up emit_json_tags and emit_prepared_queries options for better integration.",
+            "status": "pending",
+            "testStrategy": "Validate sqlc.yaml syntax and verify directory structure is created correctly. Test SQLC configuration by running sqlc version and sqlc verify commands."
+          },
+          {
+            "id": 2,
+            "title": "Write SQL Schema and Migration Files",
+            "description": "Create database schema files with proper table definitions for chargers, transactions, and meter_values",
+            "dependencies": [
+              "3.1"
+            ],
+            "details": "Create migration files in db/migrations/ directory defining the database schema. Include chargers table with fields: id, charger_id (unique), model, vendor, firmware_version, last_boot_at, last_heartbeat_at, last_tx_start_at, last_tx_stop_at, status, created_at, updated_at. Create transactions table with: id, charger_id, connector_id, transaction_id, id_tag, start_time, stop_time, start_meter_value, stop_meter_value, status. Create meter_values table with: id, charger_id, connector_id, transaction_id, timestamp, value, unit, context, measurand. Add proper indexes and foreign key constraints.",
+            "status": "pending",
+            "testStrategy": "Validate SQL syntax using PostgreSQL client. Test migration files by applying them to a test database and verifying table structure and constraints."
+          },
+          {
+            "id": 3,
+            "title": "Write SQL Queries for CRUD Operations",
+            "description": "Create SQL query files for all database operations needed by the OCPP server",
+            "dependencies": [
+              "3.2"
+            ],
+            "details": "Create query files in db/queries/ directory for each table. For chargers: CreateCharger, GetCharger, GetChargerByChargerID, UpdateChargerStatus, UpdateChargerHeartbeat, UpdateChargerBootTime, UpdateChargerTransactionTimes. For transactions: CreateTransaction, GetTransaction, GetActiveTransactionByConnector, UpdateTransaction, CloseTransaction, GetOrphanedTransactions. For meter_values: CreateMeterValue, GetMeterValuesByTransaction, GetMeterValuesByCharger. Use proper SQL parameter binding with $1, $2 syntax. Include proper WHERE clauses and JOIN operations where needed.",
+            "status": "pending",
+            "testStrategy": "Validate SQL query syntax and test each query manually against the database schema. Verify parameter binding and expected result sets for each query."
+          },
+          {
+            "id": 4,
+            "title": "Generate Go Code Using SQLC",
+            "description": "Run SQLC code generation to create type-safe Go database access code",
+            "dependencies": [
+              "3.3"
+            ],
+            "details": "Execute 'sqlc generate' command to generate Go code from SQL queries and schema. Verify generated files in internal/db/ directory including: db.go (database interface), models.go (struct definitions), and query files for each table. Review generated code for proper type safety, null handling, and parameter binding. Ensure generated structs have proper JSON tags and field types match database schema. Verify that all SQL queries have corresponding Go methods with appropriate parameter and return types.",
+            "status": "pending",
+            "testStrategy": "Verify generated Go code compiles without errors. Test type safety by attempting to use generated methods with incorrect parameter types. Validate that generated structs properly handle nullable database fields."
+          },
+          {
+            "id": 5,
+            "title": "Create Database Service Layer with Connection Management",
+            "description": "Implement a database service layer that wraps the generated SQLC code with proper connection management and error handling",
+            "dependencies": [
+              "3.4"
+            ],
+            "details": "Create internal/database/service.go with a DatabaseService struct that embeds the generated SQLC Queries interface. Implement connection pool management using pgxpool for PostgreSQL connections. Add methods for charger operations: RegisterCharger, GetCharger, UpdateChargerStatus, UpdateHeartbeat. Implement transaction management methods: StartTransaction, StopTransaction, GetActiveTransaction, CloseOrphanedTransactions. Add meter value operations: StoreMeterValue, GetMeterValues. Implement proper error handling with custom error types for common database errors (not found, constraint violations, connection errors). Add connection health checks and retry logic for transient failures.",
+            "status": "pending",
+            "testStrategy": "Test database service methods with sample data to verify CRUD operations work correctly. Test connection pool behavior under load. Validate error handling for various failure scenarios including connection loss, constraint violations, and invalid data. Test transaction isolation and concurrent access patterns."
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Implement Core OCPP Server with WebSocket Handling",
+        "description": "Create WebSocket server using ocpp-go library to handle charger connections",
+        "details": "Implement WebSocket server listening on `/ocpp/{chargerID}` endpoint using ocpp-go CentralSystem. Create connection manager to track active charger connections. Implement proper connection lifecycle handling including connect, disconnect, and reconnection logic. Create charger registration system that automatically creates database records for new chargers. Add connection pooling and timeout management. Integrate with Gin web framework for HTTP routing.",
+        "testStrategy": "Test WebSocket connection establishment and message routing. Verify charger ID extraction from URL path. Test connection cleanup on disconnect. Use WebSocket client tools for integration testing.",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up WebSocket server infrastructure with Gin integration",
+            "description": "Create the basic WebSocket server setup using Gin web framework and prepare the foundation for OCPP WebSocket connections",
+            "dependencies": [],
+            "details": "Install and configure gorilla/websocket package alongside Gin framework. Create HTTP route handler for `/ocpp/{chargerID}` endpoint that upgrades HTTP connections to WebSocket. Implement WebSocket connection upgrade logic with proper error handling and CORS configuration. Set up basic request routing structure and middleware for WebSocket endpoint. Configure WebSocket connection parameters including read/write timeouts and buffer sizes.",
+            "status": "pending",
+            "testStrategy": "Test HTTP to WebSocket upgrade functionality. Verify route parameter extraction for chargerID. Test connection establishment with WebSocket client tools."
+          },
+          {
+            "id": 2,
+            "title": "Integrate ocpp-go CentralSystem library",
+            "description": "Initialize and configure the ocpp-go CentralSystem to handle OCPP protocol communication over WebSocket connections",
+            "dependencies": [
+              "4.1"
+            ],
+            "details": "Import and initialize ocpp-go CentralSystem with proper configuration for OCPP 1.6J protocol. Create CentralSystem instance with WebSocket transport layer. Configure message handlers for core OCPP operations (BootNotification, Heartbeat, StatusNotification). Set up protocol validation and message routing through the CentralSystem. Implement error handling for malformed OCPP messages and protocol violations.",
+            "status": "pending",
+            "testStrategy": "Test OCPP message parsing and validation. Verify CentralSystem initialization and configuration. Test basic OCPP message exchange with mock charger client."
+          },
+          {
+            "id": 3,
+            "title": "Implement connection manager for active charger tracking",
+            "description": "Create a connection manager to track, store, and manage active WebSocket connections from chargers with proper concurrency handling",
+            "dependencies": [
+              "4.2"
+            ],
+            "details": "Design and implement ConnectionManager struct with thread-safe operations using sync.RWMutex. Create methods for adding, removing, and retrieving active connections by chargerID. Implement connection state tracking (connected, disconnected, error states). Add connection metadata storage including connection time, last activity, and charger information. Implement connection pooling with configurable limits and cleanup routines for stale connections.",
+            "status": "pending",
+            "testStrategy": "Test concurrent connection management operations. Verify thread safety under load. Test connection state transitions and metadata accuracy."
+          },
+          {
+            "id": 4,
+            "title": "Implement connection lifecycle management",
+            "description": "Handle complete WebSocket connection lifecycle including connect, disconnect, reconnection logic, and timeout management",
+            "dependencies": [
+              "4.3"
+            ],
+            "details": "Implement connection establishment handler that registers new charger connections in the connection manager. Create disconnect handler with proper cleanup of resources and connection state updates. Implement reconnection logic with exponential backoff and maximum retry limits. Add heartbeat mechanism for connection health monitoring with configurable intervals. Implement connection timeout handling for idle connections and proper graceful shutdown procedures.",
+            "status": "pending",
+            "testStrategy": "Test connection establishment and cleanup procedures. Verify reconnection logic with simulated network failures. Test heartbeat mechanism and timeout handling."
+          },
+          {
+            "id": 5,
+            "title": "Create automatic charger registration system",
+            "description": "Implement automatic database record creation for new chargers connecting to the system with proper validation and error handling",
+            "dependencies": [
+              "4.4"
+            ],
+            "details": "Create charger registration handler that triggers on first connection from unknown chargerID. Implement database integration to automatically create charger records with extracted information from BootNotification messages. Add charger validation logic including ID format validation and duplicate prevention. Implement registration event logging and notification system. Create charger metadata extraction and storage including vendor, model, and firmware version information from OCPP messages.",
+            "status": "pending",
+            "testStrategy": "Test automatic charger registration with new charger connections. Verify database record creation and data integrity. Test duplicate registration prevention and error handling for invalid charger data."
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Implement OCPP Core Profile Message Handlers",
+        "description": "Create handlers for essential OCPP 1.6 core profile messages: BootNotification, StatusNotification, Heartbeat",
+        "details": "Implement OnBootNotification handler to accept charger registration and update database with charger details and last_boot_at timestamp. Create OnStatusNotification handler to track charger and connector status changes, updating database state. Implement OnHeartbeat handler to maintain connection health and update last_heartbeat_at. Add proper error handling and response generation following OCPP 1.6 specification. Update charger state in database for each message type.",
+        "testStrategy": "Test each message handler with valid OCPP messages. Verify database state updates correctly. Test error conditions and proper response codes. Use OCPP message simulators for validation.",
+        "priority": "high",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement BootNotification Message Handler",
+            "description": "Create the OnBootNotification handler to process charger registration requests and update database with charger information",
+            "dependencies": [],
+            "details": "Implement OnBootNotification handler function that accepts OCPP BootNotification request messages. Parse charger vendor, model, serial number, and firmware version from the message payload. Update or insert charger record in database with registration details and set last_boot_at timestamp to current time. Generate proper OCPP BootNotification response with registration status (Accepted/Pending/Rejected) and heartbeat interval. Include error handling for database operations and invalid message formats. Follow OCPP 1.6 specification for message structure and response codes.",
+            "status": "pending",
+            "testStrategy": "Test with valid BootNotification messages containing different charger information. Verify database updates and proper response generation. Test error handling with malformed messages and database connection failures."
+          },
+          {
+            "id": 2,
+            "title": "Implement StatusNotification Message Handler",
+            "description": "Create the OnStatusNotification handler to track charger and connector status changes and update database state",
+            "dependencies": [],
+            "details": "Implement OnStatusNotification handler to process charger and connector status updates. Parse connector ID, status (Available, Preparing, Charging, SuspendedEV, SuspendedEVSE, Finishing, Reserved, Unavailable, Faulted), error code, and timestamp from message payload. Update charger_connectors table with new status and timestamp. Handle both charger-level (connector ID 0) and individual connector status updates. Generate appropriate OCPP response acknowledging the status update. Implement proper error handling for invalid connector IDs and unknown status values.",
+            "status": "pending",
+            "testStrategy": "Test status updates for different connector states and error conditions. Verify database state changes match received status notifications. Test handling of invalid connector IDs and status values."
+          },
+          {
+            "id": 3,
+            "title": "Implement Heartbeat Message Handler",
+            "description": "Create the OnHeartbeat handler to maintain connection health monitoring and update database timestamps",
+            "dependencies": [],
+            "details": "Implement OnHeartbeat handler to process periodic heartbeat messages from chargers. Update charger record in database with last_heartbeat_at timestamp set to current time. Generate OCPP Heartbeat response with current server timestamp. Implement connection health tracking by monitoring heartbeat intervals. Add logic to detect missed heartbeats and update charger connection status accordingly. Include error handling for database update failures and ensure minimal processing overhead for high-frequency heartbeat messages.",
+            "status": "pending",
+            "testStrategy": "Test heartbeat processing and database timestamp updates. Verify response generation with correct server timestamps. Test connection health detection with simulated missed heartbeats."
+          },
+          {
+            "id": 4,
+            "title": "Implement OCPP Message Response Generation",
+            "description": "Create standardized response generation system for all OCPP core profile message handlers with proper error handling",
+            "dependencies": [
+              "5.1",
+              "5.2",
+              "5.3"
+            ],
+            "details": "Implement centralized response generation functions for BootNotification, StatusNotification, and Heartbeat messages following OCPP 1.6 specification. Create response builder functions that generate properly formatted JSON responses with correct message IDs, action types, and payload structures. Implement error response generation for various failure scenarios (database errors, validation failures, internal errors). Add response validation to ensure compliance with OCPP schema. Include proper HTTP status codes and content-type headers for WebSocket message responses.",
+            "status": "pending",
+            "testStrategy": "Test response generation for successful and error scenarios. Validate response JSON structure against OCPP 1.6 schema. Test error response codes and message formats."
+          },
+          {
+            "id": 5,
+            "title": "Integrate Message Handlers with WebSocket Connection Manager",
+            "description": "Connect the implemented message handlers to the WebSocket connection system and add comprehensive error handling",
+            "dependencies": [
+              "5.1",
+              "5.2",
+              "5.3",
+              "5.4"
+            ],
+            "details": "Integrate all three message handlers (BootNotification, StatusNotification, Heartbeat) with the existing WebSocket connection manager. Implement message routing logic to dispatch incoming OCPP messages to appropriate handlers based on action type. Add comprehensive error handling for message parsing failures, handler exceptions, and database connection issues. Implement proper logging for all message processing activities including request/response pairs and error conditions. Add message validation before handler execution and ensure proper cleanup on connection termination. Include performance monitoring for message processing times.",
+            "status": "pending",
+            "testStrategy": "Test end-to-end message flow from WebSocket reception to database updates. Verify proper error handling and logging. Test concurrent message processing and connection management. Validate message routing accuracy."
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Implement Transaction Management Handlers",
+        "description": "Create handlers for StartTransaction and StopTransaction OCPP messages with automated transaction ID generation",
+        "details": "Implement OnStartTransaction handler with automatic transaction ID generation, database persistence, and connector state tracking. Create OnStopTransaction handler to close transactions and update final meter readings. Add transaction validation logic to prevent duplicate active transactions per connector. Implement orphaned transaction recovery logic that auto-closes existing transactions when new ones start. Update last_tx_start_at and last_tx_stop_at timestamps in charger records.",
+        "testStrategy": "Test transaction lifecycle from start to stop. Verify transaction ID uniqueness and proper database persistence. Test orphaned transaction recovery scenarios. Validate connector state consistency.",
+        "priority": "high",
+        "dependencies": [
+          5
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Transaction Database Schema and Models",
+            "description": "Create database schema and Go models for transaction management including transaction records, connector state tracking, and charger timestamp updates",
+            "dependencies": [],
+            "details": "Create transactions table with fields: id (auto-increment), transaction_id (unique), charger_id, connector_id, id_tag, start_timestamp, stop_timestamp, start_meter_value, stop_meter_value, status (active/completed/orphaned). Add indexes on charger_id, connector_id, and transaction_id. Create Go structs for Transaction model with proper JSON tags. Update chargers table to include last_tx_start_at and last_tx_stop_at timestamp fields. Implement database migration scripts and model validation methods.",
+            "status": "pending",
+            "testStrategy": "Test database schema creation and model validation. Verify unique constraints and foreign key relationships. Test migration scripts with existing data."
+          },
+          {
+            "id": 2,
+            "title": "Create Transaction ID Generation and Validation Logic",
+            "description": "Implement automatic transaction ID generation system with uniqueness guarantees and validation logic to prevent duplicate active transactions",
+            "dependencies": [
+              "6.1"
+            ],
+            "details": "Implement transaction ID generator using atomic counters or UUID-based approach to ensure uniqueness across all chargers. Create validation functions to check for existing active transactions on specific connectors. Implement transaction state management functions including status transitions (active -> completed/orphaned). Add helper functions for transaction lookup by ID, charger, and connector. Include proper error handling for transaction conflicts and invalid state transitions.",
+            "status": "pending",
+            "testStrategy": "Test transaction ID uniqueness under concurrent load. Verify validation logic prevents duplicate active transactions. Test transaction state transitions and error conditions."
+          },
+          {
+            "id": 3,
+            "title": "Implement OnStartTransaction Handler",
+            "description": "Create OCPP StartTransaction message handler with automatic transaction ID generation, database persistence, and connector state tracking",
+            "dependencies": [
+              "6.1",
+              "6.2"
+            ],
+            "details": "Implement OnStartTransaction handler that processes StartTransaction requests from chargers. Generate unique transaction ID and create transaction record in database with start timestamp and meter value. Update connector status to 'Occupied' and charger's last_tx_start_at timestamp. Implement orphaned transaction recovery by auto-closing any existing active transactions on the same connector before starting new one. Return StartTransactionResponse with generated transaction ID. Add proper error handling for database failures and invalid requests.",
+            "status": "pending",
+            "testStrategy": "Test transaction creation with valid StartTransaction requests. Verify orphaned transaction recovery scenarios. Test error handling for invalid connector IDs and database failures."
+          },
+          {
+            "id": 4,
+            "title": "Implement OnStopTransaction Handler",
+            "description": "Create OCPP StopTransaction message handler to close transactions, update final meter readings, and manage connector state transitions",
+            "dependencies": [
+              "6.1",
+              "6.2"
+            ],
+            "details": "Implement OnStopTransaction handler that processes StopTransaction requests with transaction ID validation. Update transaction record with stop timestamp, final meter value, and status change to 'completed'. Update connector status back to 'Available' and charger's last_tx_stop_at timestamp. Handle cases where transaction ID doesn't exist or is already closed. Calculate transaction duration and energy consumed. Return StopTransactionResponse with acceptance status. Add logging for transaction completion events.",
+            "status": "pending",
+            "testStrategy": "Test transaction closure with valid StopTransaction requests. Verify proper handling of invalid or already-closed transaction IDs. Test connector state transitions and timestamp updates."
+          },
+          {
+            "id": 5,
+            "title": "Integrate Transaction Handlers with OCPP Message Router",
+            "description": "Integrate StartTransaction and StopTransaction handlers into the existing OCPP message routing system with proper error handling and logging",
+            "dependencies": [
+              "6.3",
+              "6.4"
+            ],
+            "details": "Register OnStartTransaction and OnStopTransaction handlers with the OCPP message router. Implement proper message type routing for StartTransaction and StopTransaction action types. Add comprehensive logging for all transaction events including start, stop, errors, and orphaned transaction recovery. Implement proper error responses for OCPP protocol compliance. Add transaction event notifications or callbacks for external system integration. Ensure thread-safe operation for concurrent transaction handling across multiple chargers.",
+            "status": "pending",
+            "testStrategy": "Test end-to-end transaction flow from StartTransaction to StopTransaction. Verify proper OCPP message routing and response formatting. Test concurrent transaction handling across multiple chargers and connectors."
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Implement Meter Values Collection and Storage",
+        "description": "Create handler for MeterValues messages to collect and store energy consumption data",
+        "details": "Implement OnMeterValues handler to process energy consumption readings from chargers. Parse meter value arrays and extract power, energy, voltage, and current readings. Store meter data in database with proper timestamps and transaction associations. Handle different meter value contexts (transaction start/stop, periodic readings). Implement data validation and unit conversion as needed. Support multiple measurands per message.",
+        "testStrategy": "Test meter value parsing and storage with various measurand types. Verify data integrity and timestamp accuracy. Test handling of malformed meter data. Validate database storage efficiency.",
+        "priority": "medium",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create MeterValues Message Parser",
+            "description": "Implement parser to extract and validate meter value data from OCPP MeterValues messages",
+            "dependencies": [],
+            "details": "Create a parser function that processes incoming MeterValues messages and extracts meter value arrays. Parse individual meter values to identify measurand types (Energy.Active.Import.Register, Power.Active.Import, Voltage, Current.Import, etc.), values, units, contexts (Sample.Periodic, Transaction.Begin, Transaction.End), and timestamps. Implement validation for required fields and data types. Handle different unit formats and convert to standardized units where necessary. Create data structures to represent parsed meter values with proper type safety.",
+            "status": "pending",
+            "testStrategy": "Test parsing with various MeterValues message formats and measurand combinations. Verify handling of missing optional fields and malformed data. Test unit conversion accuracy and validation error handling."
+          },
+          {
+            "id": 2,
+            "title": "Design Database Schema for Meter Data Storage",
+            "description": "Create database tables and indexes optimized for storing time-series meter value data",
+            "dependencies": [
+              "7.1"
+            ],
+            "details": "Design meter_values table with columns for charger_id, transaction_id, timestamp, measurand_type, value, unit, context, and location. Create indexes on timestamp, charger_id, and transaction_id for efficient querying. Design schema to handle multiple measurands per timestamp efficiently. Add constraints for data integrity and foreign key relationships to transactions table. Consider partitioning strategy for large datasets. Create migration scripts for schema deployment and updates.",
+            "status": "pending",
+            "testStrategy": "Test database schema creation and migration scripts. Verify index performance with large datasets. Test foreign key constraints and data integrity rules. Validate query performance for common access patterns."
+          },
+          {
+            "id": 3,
+            "title": "Implement Meter Data Storage Service",
+            "description": "Create service layer for persisting parsed meter values to database with transaction association",
+            "dependencies": [
+              "7.1",
+              "7.2"
+            ],
+            "details": "Implement storage service that accepts parsed meter value data and persists it to the database. Handle batch insertion for multiple meter values from single message to improve performance. Implement transaction association logic to link meter values with active charging transactions. Add error handling for database connection issues and constraint violations. Implement retry logic for transient failures. Create methods for querying stored meter data by charger, transaction, or time range.",
+            "status": "pending",
+            "testStrategy": "Test batch insertion performance and data integrity. Verify transaction association accuracy. Test error handling and retry mechanisms. Validate query methods with various filter criteria."
+          },
+          {
+            "id": 4,
+            "title": "Create OnMeterValues OCPP Handler",
+            "description": "Implement OCPP message handler that processes MeterValues messages and coordinates parsing and storage",
+            "dependencies": [
+              "7.1",
+              "7.3"
+            ],
+            "details": "Create OnMeterValues handler function that receives OCPP MeterValues messages from chargers. Integrate with the meter value parser to extract data from messages. Validate message structure and required fields according to OCPP specification. Handle different meter value contexts appropriately (periodic readings vs transaction events). Coordinate with storage service to persist data. Implement proper error responses for malformed messages. Add logging for successful processing and error conditions.",
+            "status": "pending",
+            "testStrategy": "Test handler with various MeterValues message types and contexts. Verify OCPP compliance and proper error responses. Test integration with parser and storage components. Validate logging output and error handling."
+          },
+          {
+            "id": 5,
+            "title": "Implement Data Validation and Quality Assurance",
+            "description": "Add comprehensive validation rules and data quality checks for meter value processing",
+            "dependencies": [
+              "7.1",
+              "7.2",
+              "7.3",
+              "7.4"
+            ],
+            "details": "Implement validation rules for meter value ranges, units, and consistency checks. Add data quality assurance including detection of anomalous readings, duplicate timestamps, and out-of-sequence data. Implement configurable validation thresholds for different measurand types. Add data sanitization for edge cases and malformed values. Create alerting mechanism for data quality issues. Implement data correction strategies for common issues like clock drift or unit mismatches.",
+            "status": "pending",
+            "testStrategy": "Test validation rules with edge cases and boundary values. Verify anomaly detection accuracy with known good and bad data. Test data correction mechanisms and alerting functionality. Validate performance impact of validation processes."
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Implement Auto-Start Transaction Plugin System",
+        "description": "Create plugin architecture with auto-start transaction behavior when charger status changes to 'Preparing'",
+        "details": "Design event-driven plugin system with hooks for OCPP events and state changes. Create base plugin interface with event handlers. Implement auto-start transaction plugin that triggers RemoteStartTransaction when charger status becomes 'Preparing'. Add plugin configuration system to enable/disable behaviors per charger or globally. Create plugin registry and lifecycle management. Implement proper error handling and logging for plugin execution.",
+        "testStrategy": "Test plugin system registration and event triggering. Verify auto-start behavior with status change simulation. Test plugin enable/disable functionality. Validate error isolation between plugins.",
+        "priority": "medium",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design and Implement Base Plugin Interface",
+            "description": "Create the foundational plugin architecture with base interfaces and event handling system for OCPP events and state changes",
+            "dependencies": [],
+            "details": "Define IPlugin interface with methods for Initialize(), HandleEvent(), GetName(), GetVersion(), and IsEnabled(). Create PluginEvent struct to encapsulate event data including event type, charger ID, timestamp, and payload. Implement EventType enum for OCPP events (StatusNotification, StartTransaction, StopTransaction, etc.) and system events. Create PluginContext struct to provide plugins access to OCPP client, database, and logging. Design plugin lifecycle states (Unloaded, Loaded, Initialized, Running, Error).",
+            "status": "pending",
+            "testStrategy": "Test interface implementation with mock plugins. Verify event data structure and serialization. Test plugin lifecycle state transitions."
+          },
+          {
+            "id": 2,
+            "title": "Implement Plugin Registry and Lifecycle Management",
+            "description": "Create plugin registry system to manage plugin registration, loading, and lifecycle operations",
+            "dependencies": [
+              "8.1"
+            ],
+            "details": "Implement PluginRegistry struct with methods for RegisterPlugin(), UnregisterPlugin(), LoadPlugin(), UnloadPlugin(), and GetPlugin(). Create plugin discovery mechanism to scan for available plugins. Implement plugin dependency resolution and loading order management. Add plugin state tracking and health monitoring. Create plugin isolation to prevent one plugin failure from affecting others. Implement graceful plugin shutdown and cleanup procedures. Add plugin metadata management including version compatibility checks.",
+            "status": "pending",
+            "testStrategy": "Test plugin registration and discovery mechanisms. Verify plugin loading order with dependencies. Test error isolation between plugins and graceful failure handling."
+          },
+          {
+            "id": 3,
+            "title": "Create Plugin Configuration System",
+            "description": "Implement configuration management for plugins with per-charger and global settings support",
+            "dependencies": [
+              "8.1",
+              "8.2"
+            ],
+            "details": "Create PluginConfig struct with global and per-charger configuration sections. Implement configuration loading from environment variables, configuration files, and database. Add configuration validation and schema definition for plugin settings. Create configuration precedence handling (charger-specific overrides global settings). Implement runtime configuration updates and plugin reconfiguration. Add configuration templates and default values for common plugin types. Create configuration API for dynamic plugin enable/disable operations.",
+            "status": "pending",
+            "testStrategy": "Test configuration loading from multiple sources with proper precedence. Verify per-charger configuration overrides. Test runtime configuration updates and plugin reconfiguration."
+          },
+          {
+            "id": 4,
+            "title": "Implement Auto-Start Transaction Plugin",
+            "description": "Create the specific auto-start transaction plugin that triggers RemoteStartTransaction when charger status changes to 'Preparing'",
+            "dependencies": [
+              "8.1",
+              "8.2",
+              "8.3"
+            ],
+            "details": "Implement AutoStartTransactionPlugin struct implementing IPlugin interface. Create HandleEvent method to listen for StatusNotification events with status 'Preparing'. Implement logic to trigger RemoteStartTransaction OCPP command when conditions are met. Add configurable conditions for auto-start (connector availability, authorization requirements, time-based rules). Implement transaction tracking to prevent duplicate start attempts. Add support for different auto-start strategies (immediate, delayed, conditional). Create plugin-specific configuration options for timeout values, retry logic, and authorization handling.",
+            "status": "pending",
+            "testStrategy": "Test auto-start behavior with simulated status changes to 'Preparing'. Verify RemoteStartTransaction command generation and execution. Test configuration-based conditional logic and authorization handling."
+          },
+          {
+            "id": 5,
+            "title": "Integrate Plugin System with OCPP Event Pipeline",
+            "description": "Connect the plugin system to the existing OCPP message handling pipeline with proper error handling and logging",
+            "dependencies": [
+              "8.1",
+              "8.2",
+              "8.3",
+              "8.4"
+            ],
+            "details": "Modify existing OCPP handlers to emit plugin events for relevant messages (StatusNotification, StartTransaction, StopTransaction, etc.). Implement event dispatcher to route events to registered plugins asynchronously. Add plugin execution timeout handling and circuit breaker pattern for failing plugins. Implement comprehensive logging for plugin execution including performance metrics and error tracking. Create plugin execution context with correlation IDs for tracing. Add plugin performance monitoring and alerting for slow or failing plugins. Implement plugin execution queuing and backpressure handling.",
+            "status": "pending",
+            "testStrategy": "Test event emission from OCPP handlers and plugin event routing. Verify plugin execution isolation and timeout handling. Test logging and monitoring integration with plugin execution pipeline."
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Implement Message Queuing and Single-Flight Rule",
+        "description": "Create message queuing system to ensure single in-flight message per charger with proper ordering",
+        "details": "Implement per-charger message queues to maintain single in-flight message constraint. Create message dispatcher with proper ordering and timeout handling. Add message acknowledgment tracking and retry logic. Implement queue persistence for reliability during system restarts. Add proper synchronization for concurrent access. Create monitoring for queue depths and message processing times.",
+        "testStrategy": "Test message ordering and single-flight constraint enforcement. Verify queue persistence across restarts. Test timeout and retry mechanisms. Validate concurrent access safety with multiple goroutines.",
+        "priority": "medium",
+        "dependencies": [
+          8
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Per-Charger Message Queue Structure",
+            "description": "Create the core message queue data structure that maintains separate queues for each charger to ensure proper message ordering and single in-flight constraint",
+            "dependencies": [],
+            "details": "Create a MessageQueue struct with per-charger queues using sync.Map or regular map with mutex. Implement queue operations (Enqueue, Dequeue, Peek) with proper synchronization. Add charger ID-based queue management and message priority handling. Include queue size limits and overflow protection. Implement thread-safe operations for concurrent access from multiple goroutines.",
+            "status": "pending",
+            "testStrategy": "Test queue creation and basic operations. Verify thread safety with concurrent goroutines. Test queue size limits and overflow handling. Validate per-charger isolation."
+          },
+          {
+            "id": 2,
+            "title": "Create Message Dispatcher with Single-Flight Enforcement",
+            "description": "Implement the message dispatcher that enforces single in-flight message per charger and handles message routing with proper ordering",
+            "dependencies": [
+              "9.1"
+            ],
+            "details": "Create MessageDispatcher struct that tracks in-flight messages per charger using a map of charger IDs to message states. Implement dispatch logic that checks for existing in-flight messages before sending new ones. Add message state tracking (pending, in-flight, acknowledged, failed). Create goroutine-based dispatcher that processes queues sequentially per charger while allowing parallel processing across different chargers.",
+            "status": "pending",
+            "testStrategy": "Test single-flight constraint enforcement with multiple messages. Verify message ordering within charger queues. Test parallel processing across different chargers. Validate state transitions and tracking accuracy."
+          },
+          {
+            "id": 3,
+            "title": "Implement Message Acknowledgment and Timeout Handling",
+            "description": "Add message acknowledgment tracking system with configurable timeouts and automatic retry logic for failed messages",
+            "dependencies": [
+              "9.2"
+            ],
+            "details": "Implement acknowledgment tracking using message IDs and timestamps. Create timeout mechanism using time.Timer for each in-flight message. Add retry logic with exponential backoff and maximum retry limits. Implement message state updates on acknowledgment or timeout. Create cleanup routines for expired messages and proper resource management.",
+            "status": "pending",
+            "testStrategy": "Test acknowledgment processing and state updates. Verify timeout handling with various timeout values. Test retry logic with exponential backoff. Validate cleanup of expired messages and resource management."
+          },
+          {
+            "id": 4,
+            "title": "Add Queue Persistence and Recovery Mechanisms",
+            "description": "Implement queue persistence to disk for reliability during system restarts and add recovery mechanisms to restore queue state",
+            "dependencies": [
+              "9.1",
+              "9.3"
+            ],
+            "details": "Create persistence layer using JSON or binary serialization to save queue state to disk. Implement periodic queue snapshots and write-ahead logging for message operations. Add recovery logic that restores queue state on service startup. Handle partial message states during recovery (in-flight messages become pending). Implement file-based storage with proper error handling and atomic operations.",
+            "status": "pending",
+            "testStrategy": "Test queue persistence across service restarts. Verify recovery of pending and in-flight messages. Test persistence performance impact and file corruption handling. Validate atomic operations and data integrity."
+          },
+          {
+            "id": 5,
+            "title": "Create Queue Monitoring and Metrics Collection",
+            "description": "Implement comprehensive monitoring for queue depths, message processing times, and system performance metrics",
+            "dependencies": [
+              "9.2",
+              "9.3"
+            ],
+            "details": "Add metrics collection for queue depths per charger, message processing times, throughput rates, and error counts. Implement monitoring endpoints that expose queue statistics and health information. Create alerting thresholds for queue depth and processing delays. Add performance tracking for message dispatch latency and acknowledgment times. Integrate with existing metrics system for centralized monitoring.",
+            "status": "pending",
+            "testStrategy": "Test metrics accuracy with known message volumes. Verify monitoring endpoint responses and data format. Test alerting thresholds and performance tracking. Validate integration with metrics collection system."
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Implement Prometheus Metrics Collection",
+        "description": "Create comprehensive Prometheus metrics for system monitoring including charger status, transactions, and performance",
+        "details": "Implement Prometheus metrics using client_golang library. Create system metrics: service uptime, active connections, message throughput, error rates, database performance. Add charger metrics: connection status, boot events, status changes, transaction counts, error conditions. Implement energy metrics: power draw, voltage/current readings, energy delivered, peak utilization. Create metrics HTTP endpoint for Prometheus scraping. Add proper metric labeling for charger identification.",
+        "testStrategy": "Test metrics collection and HTTP endpoint exposure. Verify metric accuracy with known test scenarios. Test Prometheus scraping integration. Validate metric cardinality and performance impact.",
+        "priority": "medium",
+        "dependencies": [
+          9
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up Prometheus client library and basic metric types",
+            "description": "Initialize Prometheus client_golang library and define the core metric types needed for system monitoring",
+            "dependencies": [],
+            "details": "Install prometheus/client_golang library. Create metrics package with metric registry initialization. Define basic metric types: Counter for events (transactions, errors), Gauge for current values (active connections, power draw), Histogram for response times and durations. Set up metric naming conventions following Prometheus best practices with proper prefixes (ocpp_system_, ocpp_charger_, ocpp_energy_). Initialize global metric registry and configure metric collection intervals.",
+            "status": "pending",
+            "testStrategy": "Test metric type creation and registration. Verify metric naming follows Prometheus conventions. Test basic metric operations (increment, set, observe)."
+          },
+          {
+            "id": 2,
+            "title": "Implement system-level metrics collection",
+            "description": "Create metrics for overall system health and performance monitoring",
+            "dependencies": [
+              "10.1"
+            ],
+            "details": "Implement system metrics collection including: service uptime counter, active WebSocket connections gauge, OCPP message throughput (messages/second) counter, error rate counters by error type, database query performance histograms. Add goroutine count and memory usage metrics. Implement periodic collection routines that update gauges at regular intervals. Add proper metric labels for service identification and error categorization. Ensure metrics are thread-safe for concurrent access.",
+            "status": "pending",
+            "testStrategy": "Test system metric accuracy by comparing with known system state. Verify metric updates during normal operations. Test error rate tracking with simulated failures."
+          },
+          {
+            "id": 3,
+            "title": "Implement charger-specific metrics collection",
+            "description": "Create detailed metrics for individual charger monitoring and status tracking",
+            "dependencies": [
+              "10.1"
+            ],
+            "details": "Implement charger-level metrics with proper labeling by charger ID: connection status gauge (connected/disconnected), boot notification counter, status notification counters by status type, transaction start/stop counters, heartbeat miss counters, OCPP message error counters by message type. Add charger availability status and connector status gauges. Implement metric cleanup for disconnected chargers to prevent metric cardinality explosion. Use consistent labeling scheme with charger_id, connector_id where applicable.",
+            "status": "pending",
+            "testStrategy": "Test charger metric creation and updates during charger lifecycle events. Verify proper labeling and metric cleanup. Test metric accuracy during charger connection/disconnection scenarios."
+          },
+          {
+            "id": 4,
+            "title": "Implement energy and transaction metrics",
+            "description": "Create metrics for energy consumption monitoring and transaction tracking",
+            "dependencies": [
+              "10.1"
+            ],
+            "details": "Implement energy-related metrics: current power draw gauges by charger/connector, voltage and current reading gauges, total energy delivered counters, peak power utilization gauges, transaction duration histograms. Add transaction status counters (started, completed, failed), charging session metrics (average session time, energy per session). Implement meter value processing to extract and expose relevant energy metrics. Add proper unit handling and conversion for different measurand types. Include transaction_id labeling for detailed tracking.",
+            "status": "pending",
+            "testStrategy": "Test energy metric accuracy against known meter values. Verify transaction metrics during complete charging sessions. Test metric updates with various measurand types and units."
+          },
+          {
+            "id": 5,
+            "title": "Create Prometheus HTTP endpoint and metric exposition",
+            "description": "Implement HTTP endpoint for Prometheus scraping and configure metric exposition",
+            "dependencies": [
+              "10.2",
+              "10.3",
+              "10.4"
+            ],
+            "details": "Create HTTP server endpoint at /metrics for Prometheus scraping using promhttp.Handler(). Configure proper HTTP response headers and content-type. Implement metric exposition format following Prometheus standards. Add endpoint authentication if required. Configure scraping interval recommendations and metric staleness handling. Implement graceful metric collection during high load. Add metric documentation and help text for all metrics. Ensure endpoint performance doesn't impact main OCPP service operations.",
+            "status": "pending",
+            "testStrategy": "Test /metrics endpoint accessibility and response format. Verify Prometheus can successfully scrape metrics. Test endpoint performance under load. Validate metric exposition format compliance with Prometheus standards."
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Implement Structured Logging System",
+        "description": "Create JSON-based structured logging with correlation IDs and configurable log levels",
+        "details": "Implement structured logging using JSON format with logrus or similar library. Add correlation IDs for tracking message flows across chargers. Create log level configuration (DEBUG, INFO, WARN, ERROR). Implement event categorization: System, OCPP, Transaction, Error. Add performance tracking for response times and throughput. Create message logging for all OCPP communications. Implement log rotation and retention policies.",
+        "testStrategy": "Test log output format and JSON structure validity. Verify correlation ID propagation across request flows. Test log level filtering and configuration. Validate log performance impact under load.",
+        "priority": "medium",
+        "dependencies": [
+          10
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up structured logging foundation with JSON format",
+            "description": "Initialize the structured logging system using logrus or similar library with JSON formatter configuration",
+            "dependencies": [],
+            "details": "Install and configure logrus library with JSON formatter. Create logging package with structured field support. Set up basic log entry structure with timestamp, level, message, and custom fields. Configure output to stdout/stderr with proper JSON formatting. Create logging utility functions for consistent field naming and formatting across the application.",
+            "status": "pending",
+            "testStrategy": "Test JSON output format validation, verify log entry structure, and test basic logging functionality with different log levels"
+          },
+          {
+            "id": 2,
+            "title": "Implement correlation ID system for request tracking",
+            "description": "Create correlation ID generation and propagation system to track message flows across chargers and system components",
+            "dependencies": [
+              "11.1"
+            ],
+            "details": "Implement correlation ID generation using UUID or similar unique identifier. Create middleware/context propagation to attach correlation IDs to all log entries within a request flow. Add correlation ID to HTTP headers and OCPP message contexts. Ensure correlation IDs are preserved across goroutines and async operations. Create helper functions to extract and inject correlation IDs in different contexts.",
+            "status": "pending",
+            "testStrategy": "Test correlation ID generation uniqueness, verify propagation across request boundaries, and validate correlation ID presence in all related log entries"
+          },
+          {
+            "id": 3,
+            "title": "Create configurable log levels and event categorization",
+            "description": "Implement log level configuration system and event categorization for System, OCPP, Transaction, and Error events",
+            "dependencies": [
+              "11.1"
+            ],
+            "details": "Create configuration structure for log levels (DEBUG, INFO, WARN, ERROR) with runtime configuration support. Implement event categorization system with predefined categories: System, OCPP, Transaction, Error. Create category-specific logging functions with appropriate field standardization. Add log level filtering and category-based filtering capabilities. Implement configuration validation and default value handling for log settings.",
+            "status": "pending",
+            "testStrategy": "Test log level filtering functionality, verify event categorization accuracy, and test configuration changes without service restart"
+          },
+          {
+            "id": 4,
+            "title": "Add performance tracking and OCPP message logging",
+            "description": "Implement performance metrics logging for response times and throughput, plus comprehensive OCPP message logging",
+            "dependencies": [
+              "11.2",
+              "11.3"
+            ],
+            "details": "Create performance tracking middleware to log response times, request durations, and throughput metrics. Implement OCPP message logging with request/response pairs, message types, and processing times. Add structured fields for performance data including latency percentiles and error rates. Create message logging with correlation ID linking and payload sanitization for sensitive data. Implement efficient logging to minimize performance impact on message processing.",
+            "status": "pending",
+            "testStrategy": "Test performance metric accuracy, verify OCPP message logging completeness, and validate minimal performance impact under load conditions"
+          },
+          {
+            "id": 5,
+            "title": "Implement log rotation and retention policies",
+            "description": "Create log rotation system with configurable retention policies and file management for production deployment",
+            "dependencies": [
+              "11.4"
+            ],
+            "details": "Implement log rotation using lumberjack or similar library with configurable file size limits and rotation schedules. Create retention policy configuration for log file cleanup based on age and disk space limits. Add compression support for archived log files. Implement graceful log file handling during rotation to prevent log loss. Create monitoring for log file system usage and rotation events. Add configuration options for log file paths, rotation intervals, and retention periods.",
+            "status": "pending",
+            "testStrategy": "Test log rotation triggers and file management, verify retention policy enforcement, and test log continuity during rotation events"
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Implement Configuration Management System",
+        "description": "Create configuration system supporting environment variables and CLI flags for service configuration",
+        "details": "Implement configuration management using environment variables and CLI flags with precedence handling. Create configuration struct with validation for database path, server port, heartbeat intervals, plugin settings. Add configuration file support (YAML/JSON) as optional enhancement. Implement configuration hot-reload capability. Add configuration validation and default value handling. Create configuration documentation and examples.",
+        "testStrategy": "Test configuration loading from various sources with proper precedence. Verify validation and error handling for invalid configurations. Test default value application and environment variable parsing.",
+        "priority": "medium",
+        "dependencies": [
+          11
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Configuration Structure and Default Values",
+            "description": "Define the core configuration structure with all required fields and implement default value handling for the configuration management system.",
+            "dependencies": [],
+            "details": "Create a Config struct with fields for database path, server port, heartbeat intervals, plugin settings, and other system parameters. Implement a NewConfig() function that initializes the struct with sensible default values. Define configuration field tags for validation and serialization. Create constants for default values like default port (8080), heartbeat interval (30s), database path, etc. Implement getter methods for configuration values with fallback to defaults.",
+            "status": "pending",
+            "testStrategy": "Test default configuration creation and verify all fields have appropriate default values. Test getter methods return correct defaults when values are not set."
+          },
+          {
+            "id": 2,
+            "title": "Implement Environment Variable Loading",
+            "description": "Create functionality to load configuration values from environment variables with proper type conversion and validation.",
+            "dependencies": [
+              "12.1"
+            ],
+            "details": "Implement LoadFromEnv() method that reads environment variables and populates the configuration struct. Use standard naming convention like OCPP_SERVER_PORT, OCPP_DB_PATH, OCPP_HEARTBEAT_INTERVAL. Implement type conversion for different data types (string, int, duration, bool). Handle parsing errors gracefully with meaningful error messages. Support nested configuration through prefixed environment variables. Add validation for required environment variables.",
+            "status": "pending",
+            "testStrategy": "Test environment variable parsing with various data types. Verify error handling for invalid values and missing required variables. Test with different environment variable combinations."
+          },
+          {
+            "id": 3,
+            "title": "Implement CLI Flag Support",
+            "description": "Add command-line flag parsing capability with proper flag definitions and help text generation.",
+            "dependencies": [
+              "12.1"
+            ],
+            "details": "Use cobra or flag package to implement CLI flag parsing. Define flags for all configuration options with appropriate short and long forms (e.g., -p/--port, -d/--database). Implement LoadFromFlags() method that parses command-line arguments and updates configuration. Add comprehensive help text and usage examples for each flag. Handle flag parsing errors and provide user-friendly error messages. Support both single-dash and double-dash flag formats.",
+            "status": "pending",
+            "testStrategy": "Test CLI flag parsing with various flag combinations. Verify help text generation and error handling for invalid flags. Test flag precedence and override behavior."
+          },
+          {
+            "id": 4,
+            "title": "Implement Configuration Precedence and Validation",
+            "description": "Create configuration loading orchestration with proper precedence handling and comprehensive validation.",
+            "dependencies": [
+              "12.1",
+              "12.2",
+              "12.3"
+            ],
+            "details": "Implement Load() method that combines configuration from defaults, environment variables, and CLI flags in proper precedence order (CLI flags override env vars, env vars override defaults). Create comprehensive validation functions for each configuration field (port ranges, file path existence, positive intervals). Implement ValidateConfig() method that checks all configuration constraints and returns detailed error messages. Add configuration merging logic that preserves the precedence chain. Create helper functions for common validations like port availability and directory permissions.",
+            "status": "pending",
+            "testStrategy": "Test configuration precedence with overlapping values from different sources. Verify validation catches invalid configurations and provides clear error messages. Test edge cases like conflicting settings."
+          },
+          {
+            "id": 5,
+            "title": "Implement Configuration Hot-Reload and Documentation",
+            "description": "Add hot-reload capability for configuration changes and create comprehensive documentation with examples.",
+            "dependencies": [
+              "12.4"
+            ],
+            "details": "Implement file watcher using fsnotify to monitor configuration file changes. Create Reload() method that safely updates configuration at runtime without service restart. Implement configuration change notifications through channels or callbacks. Add thread-safe configuration access using sync.RWMutex. Create comprehensive documentation including configuration reference, environment variable list, CLI flag documentation, and usage examples. Generate sample configuration files in YAML and JSON formats. Add configuration validation examples and troubleshooting guide.",
+            "status": "pending",
+            "testStrategy": "Test hot-reload functionality with configuration file changes. Verify thread-safe access under concurrent load. Test configuration change notifications and validate documentation examples work correctly."
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "title": "Implement Health Check and Status Endpoints",
+        "description": "Create HTTP endpoints for health monitoring and system status reporting",
+        "details": "Implement health check endpoint (/health) returning service status and database connectivity. Create status endpoint (/status) with detailed system information including active connections, transaction counts, and system uptime. Add readiness and liveness probes for container orchestration. Implement graceful shutdown handling with proper connection cleanup. Add version and build information endpoints.",
+        "testStrategy": "Test health check endpoint responses under normal and error conditions. Verify status information accuracy. Test graceful shutdown behavior and connection cleanup. Validate container orchestration probe compatibility.",
+        "priority": "low",
+        "dependencies": [
+          12
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Basic Health Check Endpoint",
+            "description": "Create the fundamental /health endpoint that returns service status and database connectivity information",
+            "dependencies": [],
+            "details": "Create HTTP handler for /health endpoint that performs basic service health checks. Implement database connectivity test by executing a simple query (e.g., SELECT 1). Return JSON response with status (healthy/unhealthy), timestamp, and database connection status. Use appropriate HTTP status codes (200 for healthy, 503 for unhealthy). Include error details in response when health checks fail.",
+            "status": "pending",
+            "testStrategy": "Test endpoint response under normal conditions and when database is unavailable. Verify JSON response format and HTTP status codes. Test response time performance."
+          },
+          {
+            "id": 2,
+            "title": "Create Detailed Status Information Endpoint",
+            "description": "Implement /status endpoint providing comprehensive system information including connections, transactions, and uptime",
+            "dependencies": [
+              "13.1"
+            ],
+            "details": "Create HTTP handler for /status endpoint that collects detailed system metrics. Implement collectors for active WebSocket connections count, current transaction count, system uptime calculation, memory usage, and goroutine count. Structure response as JSON with categories: system (uptime, memory), connections (active count, connection details), transactions (active count, total processed), and database (connection pool stats). Include timestamp and service version information.",
+            "status": "pending",
+            "testStrategy": "Verify accuracy of reported metrics by comparing with actual system state. Test endpoint performance under load. Validate JSON response structure and data types."
+          },
+          {
+            "id": 3,
+            "title": "Add Container Orchestration Probes",
+            "description": "Implement /readiness and /liveness probe endpoints for Kubernetes and container orchestration platforms",
+            "dependencies": [
+              "13.1"
+            ],
+            "details": "Create /readiness endpoint that checks if service is ready to accept traffic (database connected, configuration loaded). Create /liveness endpoint for basic service availability check. Implement different health check logic for each probe type - readiness should be more comprehensive while liveness should be lightweight. Return appropriate HTTP status codes and minimal JSON responses. Add configurable timeout and retry logic for database checks.",
+            "status": "pending",
+            "testStrategy": "Test probe endpoints during service startup, normal operation, and degraded states. Verify Kubernetes integration compatibility. Test probe response times and reliability."
+          },
+          {
+            "id": 4,
+            "title": "Implement Version and Build Information Endpoint",
+            "description": "Create /version endpoint exposing application version, build information, and deployment details",
+            "dependencies": [],
+            "details": "Create HTTP handler for /version endpoint that returns build-time information. Implement build-time variable injection for version number, git commit hash, build timestamp, and Go version. Structure response as JSON with version, commit, buildTime, goVersion, and optional deployment environment. Use Go build flags (-ldflags) to inject version information during compilation. Include API version compatibility information.",
+            "status": "pending",
+            "testStrategy": "Verify version information accuracy and format. Test endpoint availability and response consistency. Validate build-time variable injection process."
+          },
+          {
+            "id": 5,
+            "title": "Implement Graceful Shutdown with Connection Cleanup",
+            "description": "Add graceful shutdown handling that properly closes connections and cleans up resources",
+            "dependencies": [
+              "13.2",
+              "13.3"
+            ],
+            "details": "Implement signal handling for SIGTERM and SIGINT to trigger graceful shutdown. Create shutdown sequence that stops accepting new connections, waits for active requests to complete (with timeout), closes WebSocket connections gracefully, closes database connections, and stops HTTP server. Update health check endpoints to return unhealthy status during shutdown process. Implement configurable shutdown timeout and connection drain period. Add logging for shutdown events and connection cleanup status.",
+            "status": "pending",
+            "testStrategy": "Test graceful shutdown behavior under various load conditions. Verify proper connection cleanup and resource deallocation. Test shutdown timeout handling and forced termination scenarios."
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "title": "Implement CLI Utilities and Administrative Tools",
+        "description": "Create command-line utilities for database management, charger administration, and system maintenance",
+        "details": "Create CLI commands in cmd/ directory for common administrative tasks. Implement database migration commands (up/down/status). Add charger management commands (list, reset, configure). Create transaction management utilities (list, close orphaned). Implement system maintenance commands (cleanup, backup). Add proper command-line argument parsing and help documentation. Create installation and usage documentation.",
+        "testStrategy": "Test each CLI command with various arguments and edge cases. Verify database operations execute correctly. Test error handling and user feedback. Validate help documentation completeness and accuracy.",
+        "priority": "low",
+        "dependencies": [
+          13
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create CLI Framework and Command Structure",
+            "description": "Set up the basic CLI framework with command-line argument parsing and help system in the cmd/ directory",
+            "dependencies": [],
+            "details": "Create main CLI entry point in cmd/admin/main.go using cobra or similar CLI library. Implement root command with global flags for configuration (database path, log level). Set up command structure with subcommands for database, charger, transaction, and system operations. Add version command and global help documentation. Implement proper error handling and user feedback mechanisms.",
+            "status": "pending",
+            "testStrategy": "Test command parsing, help output, and error handling for invalid arguments"
+          },
+          {
+            "id": 2,
+            "title": "Implement Database Management Commands",
+            "description": "Create CLI commands for database migration and maintenance operations",
+            "dependencies": [
+              "14.1"
+            ],
+            "details": "Implement 'db' subcommand group with migrate up/down/status operations. Create migration status tracking in database. Add database backup and restore commands. Implement database health check and connection testing. Add commands for database cleanup and optimization. Include proper transaction handling and rollback capabilities for failed migrations.",
+            "status": "pending",
+            "testStrategy": "Test migration operations with various database states, verify backup/restore functionality, and test error recovery"
+          },
+          {
+            "id": 3,
+            "title": "Create Charger Management Commands",
+            "description": "Implement CLI utilities for charger administration and configuration",
+            "dependencies": [
+              "14.1"
+            ],
+            "details": "Create 'charger' subcommand group with list, reset, and configure operations. Implement charger discovery and status reporting. Add commands to reset charger connections and clear cached data. Create configuration update commands for charger-specific settings. Implement charger registration and deregistration utilities. Add bulk operations for managing multiple chargers.",
+            "status": "pending",
+            "testStrategy": "Test charger operations with connected and disconnected chargers, verify configuration updates, and test bulk operations"
+          },
+          {
+            "id": 4,
+            "title": "Develop Transaction Management Utilities",
+            "description": "Create CLI commands for transaction monitoring and maintenance",
+            "dependencies": [
+              "14.1"
+            ],
+            "details": "Implement 'transaction' subcommand group with list, close, and cleanup operations. Create utilities to identify and close orphaned transactions. Add transaction history and reporting commands. Implement transaction data export functionality. Create commands for transaction validation and integrity checks. Add utilities for transaction reconciliation and audit trails.",
+            "status": "pending",
+            "testStrategy": "Test transaction operations with various transaction states, verify orphaned transaction detection, and test data export functionality"
+          },
+          {
+            "id": 5,
+            "title": "Create System Maintenance and Documentation",
+            "description": "Implement system maintenance commands and create comprehensive CLI documentation",
+            "dependencies": [
+              "14.2",
+              "14.3",
+              "14.4"
+            ],
+            "details": "Create 'system' subcommand group with cleanup, backup, and maintenance operations. Implement log rotation and cleanup utilities. Add system health check and diagnostic commands. Create installation scripts and usage documentation. Implement configuration validation and testing utilities. Add performance monitoring and system statistics commands. Create comprehensive man pages and usage examples.",
+            "status": "pending",
+            "testStrategy": "Test system maintenance operations, verify documentation accuracy and completeness, and validate installation procedures"
+          }
+        ]
+      },
+      {
+        "id": 15,
+        "title": "Integration Testing and Documentation",
+        "description": "Create comprehensive integration tests and complete system documentation",
+        "details": "Implement end-to-end integration tests using real OCPP message flows. Create test scenarios for complete transaction lifecycles, error conditions, and plugin behaviors. Add performance testing for concurrent charger connections and message throughput. Create comprehensive API documentation and deployment guides. Implement Docker containerization with proper configuration. Add monitoring and alerting setup documentation. Create troubleshooting guides and operational runbooks.",
+        "testStrategy": "Execute full integration test suite with multiple simulated chargers. Verify system performance under load testing scenarios. Test Docker deployment and configuration. Validate documentation accuracy through fresh deployment testing.",
+        "priority": "low",
+        "dependencies": [
+          14
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement End-to-End Integration Tests with Real OCPP Message Flows",
+            "description": "Create comprehensive integration tests that simulate real charger connections and OCPP message exchanges, covering complete transaction lifecycles, error conditions, and plugin behaviors",
+            "dependencies": [],
+            "details": "Set up integration test framework using Go's testing package with WebSocket client simulation. Create test scenarios for: complete charge session lifecycle (BootNotification -> StartTransaction -> MeterValues -> StopTransaction), error handling scenarios (network disconnections, invalid messages, timeout conditions), plugin behavior testing (custom message handlers, middleware execution), and charger state management validation. Implement test utilities for OCPP message creation and validation. Create mock charger simulators that can connect via WebSocket and send realistic OCPP message sequences.",
+            "status": "pending",
+            "testStrategy": "Execute full integration test suite with multiple simulated chargers connecting simultaneously. Verify message routing, state persistence, and error recovery mechanisms work correctly across different scenarios."
+          },
+          {
+            "id": 2,
+            "title": "Implement Performance Testing for Concurrent Connections and Message Throughput",
+            "description": "Create performance tests to validate system behavior under load with multiple concurrent charger connections and high message throughput scenarios",
+            "dependencies": [
+              "15.1"
+            ],
+            "details": "Develop load testing framework using Go's testing package with goroutines for concurrent connection simulation. Create performance benchmarks for: concurrent charger connections (test 100+ simultaneous WebSocket connections), message throughput testing (high-frequency MeterValues messages), database performance under load (concurrent transaction operations), memory usage and garbage collection impact, and connection pool efficiency. Implement metrics collection for response times, memory usage, CPU utilization, and database query performance. Create configurable test scenarios with different load patterns and connection counts.",
+            "status": "pending",
+            "testStrategy": "Run performance tests with varying loads (10, 50, 100+ concurrent connections). Monitor system resources and validate performance meets requirements. Test system stability during sustained high-load periods."
+          },
+          {
+            "id": 3,
+            "title": "Create Comprehensive API Documentation and Deployment Guides",
+            "description": "Generate complete API documentation covering all endpoints, OCPP message handlers, and create detailed deployment guides for different environments",
+            "dependencies": [],
+            "details": "Create API documentation using tools like Swagger/OpenAPI for REST endpoints and custom documentation for WebSocket OCPP endpoints. Document all HTTP endpoints with request/response examples, authentication requirements, and error codes. Create OCPP message flow documentation showing supported message types, required fields, and response formats. Write deployment guides covering: local development setup, production deployment options, environment variable configuration, database setup and migration procedures, and SSL/TLS certificate configuration. Include architecture diagrams showing system components and data flow.",
+            "status": "pending",
+            "testStrategy": "Validate documentation accuracy by following deployment guides on fresh systems. Test all documented API endpoints and verify examples work correctly."
+          },
+          {
+            "id": 4,
+            "title": "Implement Docker Containerization with Configuration Management",
+            "description": "Create Docker containers for the application with proper configuration management, multi-stage builds, and orchestration setup",
+            "dependencies": [
+              "15.3"
+            ],
+            "details": "Create multi-stage Dockerfile for efficient Go application containerization with minimal final image size. Implement proper configuration management using environment variables and configuration files. Create docker-compose.yml for local development with PostgreSQL database service. Set up production-ready Docker configuration with health checks, resource limits, and proper logging configuration. Create container orchestration templates for Kubernetes deployment including ConfigMaps, Secrets, Services, and Ingress configurations. Implement proper signal handling for graceful container shutdown.",
+            "status": "pending",
+            "testStrategy": "Test Docker builds and container startup in different environments. Verify configuration injection works correctly. Test container orchestration and scaling scenarios."
+          },
+          {
+            "id": 5,
+            "title": "Create Monitoring, Alerting Documentation and Operational Runbooks",
+            "description": "Develop comprehensive monitoring and alerting setup documentation along with troubleshooting guides and operational runbooks for system maintenance",
+            "dependencies": [
+              "15.2",
+              "15.4"
+            ],
+            "details": "Create monitoring setup documentation covering: application metrics collection (Prometheus integration), logging configuration and centralization, health check endpoints implementation, alerting rules for critical system events (connection failures, database issues, high error rates), and dashboard creation for system visibility. Develop operational runbooks covering: system startup and shutdown procedures, database maintenance tasks, backup and recovery procedures, scaling procedures for high load, troubleshooting common issues (connection problems, performance degradation, database issues), and incident response procedures. Include monitoring queries, log analysis techniques, and performance tuning guidelines.",
+            "status": "pending",
+            "testStrategy": "Validate monitoring setup by triggering various system conditions and verifying alerts fire correctly. Test operational procedures in staging environment to ensure accuracy and completeness."
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-08-10T21:00:27.921Z",
+      "updated": "2025-08-10T21:22:01.529Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

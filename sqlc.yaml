@@ -1,0 +1,9 @@
+version: "2"
+sql:
+  - engine: "sqlite"
+    queries: "sql/schema.sql"
+    schema: "sql/migrations"
+    gen:
+      go:
+        package: "levity"
+        out: "db/sqlc"
